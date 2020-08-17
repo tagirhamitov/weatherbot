@@ -2,26 +2,33 @@ import requests
 from datetime import datetime, timezone, timedelta
 
 
-class GetInfoError(Exception):
-    def __init__(self, code):
-        self.code = code
+class WeatherInfo:
+    def __init__(self, data):
+        self.description = data['weather'][0]['description'].capitalize()
+        self.temperature = round(data['main']['temp'])
+        self.feels_like = round(data['main']['feels_like'])
+        self.pressure = round(data['main']['pressure'] / 1.333)
+        self.humidity = round(data['main']['humidity'])
+        self.wind = round(data['wind']['speed'])
 
 
-def get_rain_info(city_name, appid):
-    if not isinstance(city_name, str):
-        raise ValueError("city_name must be string")
-
-    if not isinstance(appid, str):
-        raise ValueError("appid must be string")
-
-    r = requests.get("http://api.openweathermap.org/data/2.5/forecast",
-                     params={'q': city_name, 'units': 'metric', 'lang': 'ru', 'APPID': appid})
-
+def send_request(city, appid, query_type):
+    r = requests.get(f"http://api.openweathermap.org/data/2.5/{query_type}",
+                     params={'q': city, 'units': 'metric', 'lang': 'ru', 'APPID': appid})
     data = r.json()
-    if data["cod"] == "404":
-        raise GetInfoError(404)
-    elif data["cod"] == "401":
-        raise GetInfoError(401)
+    return data
+
+
+def check_city(city, appid):
+    data = send_request(city, appid, "weather")
+    if data["cod"] == 404:
+        return None
+    else:
+        return data["name"]
+
+
+def get_rain_info(city, appid):
+    data = send_request(city, appid, "forecast")
 
     tz = timezone(timedelta(seconds=data['city']['timezone']))
     today = datetime.now(tz)
@@ -43,6 +50,9 @@ def get_rain_info(city_name, appid):
             elif code == 5 and rain_time is None:
                 rain_time = dt
 
-    local_name = data['city']['name']
+    return thunderstorm_time, rain_time, drizzle_time
 
-    return local_name, thunderstorm_time, rain_time, drizzle_time
+
+def get_current_weather(city, appid):
+    data = send_request(city, appid, "weather")
+    return WeatherInfo(data)

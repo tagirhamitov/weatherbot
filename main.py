@@ -23,29 +23,44 @@ def start_bot(message):
                          'командой \n/change.')
 
 
-@bot.message_handler(commands=['today'])
-def today_info(message):
+@bot.message_handler(commands=['rain'])
+def rain_info(message):
     status = postgresqllib.query(config, message.chat.id, Command.GET_CITY)
     if status is None:
         bot.send_message(message.chat.id, "Не установлен город. Какой город тебя интересует?")
     elif not status:
         bot.send_message(message.chat.id, "Ты не запустил бота. Воспользуйся командой /start.")
     else:
-        city, t, r, d = weatherlib.get_rain_info(status, config.appid)
-        bot.send_message(message.chat.id, f"Погода в городе {city}.")
-        if t is None and r is None and d is None:
+        city = status
+        thunderstorm_time, rain_time, drizzle_time = weatherlib.get_rain_info(city, config.appid)
+        bot.send_message(message.chat.id, f"Погода в городе {status}:")
+        if thunderstorm_time is None and rain_time is None and drizzle_time is None:
             bot.send_message(message.chat.id, "Сегодня отличная погода.")
-        if t is not None:
-            bot.send_message(message.chat.id, f"Гроза в {t.strftime('%H:%M')}.")
-        if r is not None:
-            bot.send_message(message.chat.id, f"Дождь в {r.strftime('%H:%M')}.")
-        if d is not None:
-            bot.send_message(message.chat.id, f"Мелкий дождь в {d.strftime('%H:%M')}.")
+        if thunderstorm_time is not None:
+            bot.send_message(message.chat.id, f"Гроза в {thunderstorm_time.strftime('%H:%M')}.")
+        if rain_time is not None:
+            bot.send_message(message.chat.id, f"Дождь в {rain_time.strftime('%H:%M')}.")
+        if drizzle_time is not None:
+            bot.send_message(message.chat.id, f"Мелкий дождь в {drizzle_time.strftime('%H:%M')}.")
 
 
-@bot.message_handler(commands=['tomorrow'])
-def tomorrow_info(message):
-    pass  # todo
+@bot.message_handler(commands=['now'])
+def current_weather(message):
+    status = postgresqllib.query(config, message.chat.id, Command.GET_CITY)
+    if status is None:
+        bot.send_message(message.chat.id, "Не установлен город. Какой город тебя интересует?")
+    elif not status:
+        bot.send_message(message.chat.id, "Ты не запустил бота. Воспользуйся командой /start.")
+    else:
+        city = status
+        weather = weatherlib.get_current_weather(city, config.appid)
+        bot.send_message(message.chat.id, f"Погода в городе {status}:")
+        bot.send_message(message.chat.id, f"{weather.description}.")
+        bot.send_message(message.chat.id, f"Температура: {weather.temperature}°C.")
+        bot.send_message(message.chat.id, f"Ощущается как {weather.feels_like}°C.")
+        bot.send_message(message.chat.id, f"Давление: {weather.pressure} мм рт.ст.")
+        bot.send_message(message.chat.id, f"Влажность: {weather.humidity}%.")
+        bot.send_message(message.chat.id, f"Ветер {weather.wind} м/с.")
 
 
 @bot.message_handler(commands=['stop'])
@@ -83,17 +98,16 @@ def get_current_city(message):
 def process_message(message):
     status = postgresqllib.query(config, message.chat.id, Command.GET_CITY)
     if status is None:
-        try:
-            city, _, _, _ = weatherlib.get_rain_info(message.text, config.appid)
+        city = weatherlib.check_city(message.text, config.appid)
+        if city is None:
+            bot.send_message(message.chat.id, "Кажется, такого города не существует. Повторите попытку.")
+        else:
             postgresqllib.query(config, message.chat.id, Command.SET_CITY, city)
             bot.send_message(message.chat.id, f"Информация обновлена. Текущий город - {city}.")
-        except weatherlib.GetInfoError as e:
-            if e.code == 404:
-                bot.send_message(message.chat.id, "Кажется, такого города не существует. Повторите попытку.")
-                return
-
     elif not status:
         bot.send_message(message.chat.id, "Ты не запустил бота. Воспользуйся командой /start.")
+    else:
+        bot.send_message(message.chat.id, "Неизвестная команда.")
 
 
 if __name__ == "__main__":
