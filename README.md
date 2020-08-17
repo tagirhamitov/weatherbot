@@ -28,4 +28,4 @@ To run this bot you need:<br>
 }
 ```
 6) Run ```main.py```<br>
-7) If you want to deploy the bot to heroku, set environment variables token, appid, login, password, db_name and host with their values in heroku settings. And define an empty environ variable HEROKU.
+7) If you want to deploy the bot to heroku, set environment variables: token, appid, login, password, db_name and host with their values in heroku settings and define an empty environment variable HEROKU.
