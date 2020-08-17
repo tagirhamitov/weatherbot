@@ -21,7 +21,7 @@ def send_request(city, appid, query_type):
 
 def check_city(city, appid):
     data = send_request(city, appid, "weather")
-    if data["cod"] == 404:
+    if data["cod"] != 200:
         return None
     else:
         return data["name"]
