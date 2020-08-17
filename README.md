@@ -1,3 +1,5 @@
+Original bot - <a href="t.me/tagirweatherbot">@tagirweatherbot</a><br>
+<br>
 The weather bot for telegram.<br>
 <br>
 (Only Russian language is supported)<br>
