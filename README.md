@@ -1,4 +1,4 @@
-Original bot - <a href="t.me/tagirweatherbot">@tagirweatherbot</a><br>
+Original bot - <a href="https://t.me/tagirweatherbot">@tagirweatherbot</a><br>
 <br>
 The weather bot for telegram.<br>
 <br>
