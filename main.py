@@ -46,15 +46,14 @@ def rain_info(message):
 
 @bot.message_handler(commands=['now'])
 def current_weather(message):
-    status = postgresqllib.query(config, message.chat.id, Command.GET_CITY)
-    if status is None:
+    city = postgresqllib.query(config, message.chat.id, Command.GET_CITY)
+    if city is None:
         bot.send_message(message.chat.id, "Не установлен город. Какой город тебя интересует?")
-    elif not status:
+    elif not city:
         bot.send_message(message.chat.id, "Ты не запустил бота. Воспользуйся командой /start.")
     else:
-        city = status
         weather = weatherlib.get_current_weather(city, config.appid)
-        bot.send_message(message.chat.id, f"Погода в городе {status}:")
+        bot.send_message(message.chat.id, f"Погода в городе {city}:")
         bot.send_message(message.chat.id, f"{weather.description}.")
         bot.send_message(message.chat.id, f"Температура: {weather.temperature}°C.")
         bot.send_message(message.chat.id, f"Ощущается как {weather.feels_like}°C.")
@@ -84,14 +83,22 @@ def change_city(message):
 
 @bot.message_handler(commands=['city'])
 def get_current_city(message):
-    status = postgresqllib.query(config, message.chat.id, Command.GET_CITY)
-    if status is None:
+    city = postgresqllib.query(config, message.chat.id, Command.GET_CITY)
+    if city is None:
         bot.send_message(message.chat.id, "Не установлен город. Какой город вас интересует?")
-    elif not status:
+    elif not city:
         bot.send_message(message.chat.id, "Ты не запустил бота. Воспользуйся командой /start.")
     else:
-        city = status
         bot.send_message(message.chat.id, f"Текущий город - {city}.")
+
+
+@bot.message_handler(commands=['admin_count'])
+def admin_info(message):
+    if message.chat.id != config.admin_id:
+        process_message(message)
+    else:
+        count = postgresqllib.query(config, message.chat.id, Command.GET_COUNT)
+        bot.send_message(message.chat.id, f"Пользователей бота - {count}.")
 
 
 @bot.message_handler(content_types=['text'])

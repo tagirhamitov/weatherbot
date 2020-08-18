@@ -9,7 +9,8 @@ Current working commands:<br>
 ```/stop``` - stop the bot<br>
 ```/change``` - change current city<br>
 ```/city``` - view current city<br>
-```/today``` - view today's weather<br>
+```/rain``` - view if it will rain today<br>
+```/now``` - view current weather in your city<br>
 <br>
 To run this bot you need:<br>
 1) Register bot in <a href="https://t.me/botfather">@BotFather</a> and get token.<br>
@@ -26,8 +27,10 @@ To run this bot you need:<br>
     "login": "YOUR_POSTGRESQL_LOGIN_HERE",
     "password": "YOUR_POSTGRESQL_PASSWORD_HERE",
     "db_name": "YOUR_POSTGRESQL_DATABASE_NAME_HERE",
-    "host": "YOUR_POSTGRESQL_HOST_HERE"
+    "host": "YOUR_POSTGRESQL_HOST_HERE",
+    "admin_id": "YOUR_TELEGRAM_ID_HERE"
 }
 ```
 6) Run ```main.py```<br>
-7) If you want to deploy the bot to heroku, set environment variables: token, appid, login, password, db_name and host with their values in heroku settings and define an empty environment variable HEROKU.
+7) If you want to deploy the bot to heroku, set environment variables: token, appid, login, password, db_name, host and admin_id
+ with their values in heroku settings and define an empty environment variable HEROKU.

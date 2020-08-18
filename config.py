@@ -11,6 +11,7 @@ class Config:
             self.password = os.environ['password']
             self.db_name = os.environ['db_name']
             self.host = os.environ['host']
+            self.admin_id = int(os.environ['admin_id'])
         else:
             with open(config_filename) as config_file:
                 config = json.load(config_file)
@@ -20,3 +21,4 @@ class Config:
             self.password = config['password']
             self.db_name = config['db_name']
             self.host = config['host']
+            self.admin_id = int(config['admin_id'])

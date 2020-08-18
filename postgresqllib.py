@@ -9,6 +9,7 @@ class Command(Enum):
     DELETE_USER = 3
     SET_CITY = 4
     GET_CITY = 5
+    GET_COUNT = 6
 
 
 def _get_connection(config):
@@ -41,6 +42,11 @@ def _update(cursor, chat_id, city=None):
 
 def _delete(cursor, chat_id):
     cursor.execute(f"DELETE FROM users WHERE chat_id = {chat_id}")
+
+
+def _count(cursor):
+    cursor.execute(f"SELECT * FROM users")
+    return len(cursor.fetchall())
 
 
 def query(config, chat_id, command, city=None):
@@ -76,3 +82,5 @@ def query(config, chat_id, command, city=None):
                     return False
                 else:
                     return user['city']
+            elif command == Command.GET_COUNT:
+                return _count(cursor)
