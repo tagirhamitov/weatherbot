@@ -4,14 +4,6 @@ The weather bot for telegram.<br>
 <br>
 (Only Russian language is supported)<br>
 <br>
-Current working commands:<br>
-```/start``` - start the bot<br>
-```/stop``` - stop the bot<br>
-```/change``` - change current city<br>
-```/city``` - view current city<br>
-```/rain``` - view if it will rain today<br>
-```/now``` - view current weather in your city<br>
-<br>
 To run this bot you need:<br>
 1) Register bot in <a href="https://t.me/botfather">@BotFather</a> and get token.<br>
 2) Register in <a href="https://openweathermap.org">openweathermap.org</a> and get api key.<br>
