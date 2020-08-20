@@ -33,15 +33,17 @@ def rain_info(message):
     else:
         city = status
         thunderstorm_time, rain_time, drizzle_time = weatherlib.get_rain_info(city, config.appid)
-        bot.send_message(message.chat.id, f"Погода в городе {status}:")
+        msg = f"Город {status}:"
         if thunderstorm_time is None and rain_time is None and drizzle_time is None:
-            bot.send_message(message.chat.id, "Сегодня отличная погода.")
+            msg += "\nДождя не ожидается."
         if thunderstorm_time is not None:
-            bot.send_message(message.chat.id, f"Гроза в {thunderstorm_time.strftime('%H:%M')}.")
+            msg += f"\nГроза в {thunderstorm_time.strftime('%H:%M')}."
         if rain_time is not None:
-            bot.send_message(message.chat.id, f"Дождь в {rain_time.strftime('%H:%M')}.")
+            msg += f"\nДождь в {rain_time.strftime('%H:%M')}."
         if drizzle_time is not None:
-            bot.send_message(message.chat.id, f"Мелкий дождь в {drizzle_time.strftime('%H:%M')}.")
+            msg += f"\nМелкий дождь в {drizzle_time.strftime('%H:%M')}."
+
+        bot.send_message(message.chat.id, msg)
 
 
 @bot.message_handler(commands=['now'])
@@ -53,13 +55,15 @@ def current_weather(message):
         bot.send_message(message.chat.id, "Ты не запустил бота. Воспользуйся командой /start.")
     else:
         weather = weatherlib.get_current_weather(city, config.appid)
-        bot.send_message(message.chat.id, f"Погода в городе {city}:")
-        bot.send_message(message.chat.id, f"{weather.description}.")
-        bot.send_message(message.chat.id, f"Температура: {weather.temperature}°C.")
-        bot.send_message(message.chat.id, f"Ощущается как {weather.feels_like}°C.")
-        bot.send_message(message.chat.id, f"Давление: {weather.pressure} мм рт.ст.")
-        bot.send_message(message.chat.id, f"Влажность: {weather.humidity}%.")
-        bot.send_message(message.chat.id, f"Ветер {weather.wind} м/с.")
+        msg = f"Город {city}:\n"
+        msg += f"{weather.description}.\n"
+        msg += f"Температура: {weather.temperature}°C.\n"
+        msg += f"Ощущается как {weather.feels_like}°C.\n"
+        msg += f"Давление: {weather.pressure} мм рт.ст.\n"
+        msg += f"Влажность: {weather.humidity}%.\n"
+        msg += f"Ветер {weather.wind} м/с."
+
+        bot.send_message(message.chat.id, msg)
 
 
 @bot.message_handler(commands=['stop'])
