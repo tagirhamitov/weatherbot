@@ -162,8 +162,10 @@ def process_message(message):
             lat, lon = weatherlib.get_coordinates(new_city_id, config.appid)
             if lat is not None and lon is not None:
                 bot.send_location(message.chat.id, lat, lon)
-                bot.send_message(message.chat.id,
-                                 "Если город неверный, попробуйте сменить город и немного сместить геопозицию.")
+                bot.send_message(
+                    message.chat.id,
+                    "Если город неверный, попробуйте сменить город и вместо названия отправить геопозицию."
+                )
     elif not user_city_id:
         bot.send_message(message.chat.id, "Ты не запустил бота. Воспользуйся командой /start.")
     else:
