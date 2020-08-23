@@ -12,14 +12,43 @@ class WeatherInfo:
         self.wind = round(data['wind']['speed'])
 
 
-def send_request(city_id, appid, query_type, city_type="id"):
+def send_request_by_city_id(city_id, appid, query_type):
     response = requests.get(
         f"http://api.openweathermap.org/data/2.5/{query_type}",
         params={
-            city_type: city_id,
+            'id': city_id,
             'units': 'metric',
             'lang': 'ru',
-            'APPID': appid,
+            'appid': appid,
+        }
+    )
+    data = response.json()
+    return data
+
+
+def send_request_by_city_name(city_name, appid, query_type):
+    response = requests.get(
+        f"http://api.openweathermap.org/data/2.5/{query_type}",
+        params={
+            'q': city_name,
+            'units': 'metric',
+            'lang': 'ru',
+            'appid': appid,
+        }
+    )
+    data = response.json()
+    return data
+
+
+def send_request_by_coordinates(lat, lon, appid, query_type):
+    response = requests.get(
+        f"http://api.openweathermap.org/data/2.5/{query_type}",
+        params={
+            'lat': lat,
+            'lon': lon,
+            'units': 'metric',
+            'lang': 'ru',
+            'appid': appid,
         }
     )
     data = response.json()
@@ -27,7 +56,7 @@ def send_request(city_id, appid, query_type, city_type="id"):
 
 
 def check_city(city_name, appid):
-    data = send_request(city_name, appid, "weather", "q")
+    data = send_request_by_city_name(city_name, appid, "weather")
     if data["cod"] != 200:
         return None, None
     else:
@@ -35,15 +64,31 @@ def check_city(city_name, appid):
 
 
 def get_city_name(city_id, appid):
-    data = send_request(city_id, appid, "weather")
+    data = send_request_by_city_id(city_id, appid, "weather")
     if data["cod"] != 200:
         return None
     else:
         return data["name"]
 
 
+def check_city_by_coordinates(lat, lon, appid):
+    data = send_request_by_coordinates(lat, lon, appid, "weather")
+    if data["cod"] != 200:
+        return None, None
+    else:
+        return data["id"], data["name"]
+
+
+def get_coordinates(city_id, appid):
+    data = send_request_by_city_id(city_id, appid, "weather")
+    if data["cod"] != 200:
+        return None, None
+    else:
+        return data["coord"]["lat"], data["coord"]["lon"]
+
+
 def get_rain_info(city_id, appid):
-    data = send_request(city_id, appid, "forecast")
+    data = send_request_by_city_id(city_id, appid, "forecast")
 
     tz = timezone(timedelta(seconds=data['city']['timezone']))
     today = datetime.now(tz)
@@ -69,5 +114,5 @@ def get_rain_info(city_id, appid):
 
 
 def get_current_weather(city_id, appid):
-    data = send_request(city_id, appid, "weather")
+    data = send_request_by_city_id(city_id, appid, "weather")
     return WeatherInfo(data)

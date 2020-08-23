@@ -35,8 +35,7 @@ def start_bot(message):
         msg += "Привет, я помогу тебе узнать прогноз погоды.\n"
         msg += "В каком городе ты находишься?"
     else:
-        msg += 'Похоже, ты уже запустил бота. Можешь остановить его командой \n/stop или изменить город командой ' \
-               '\n/change. '
+        msg += 'Похоже, ты уже запустил бота.'
         user_city_id = database.query(config, message.chat.id, Command.GET_CITY_ID)
         if user_city_id is not None:
             keyboard = get_main_menu()
@@ -113,7 +112,6 @@ def change_city(message):
         msg += "Ты не запустил бота. Воспользуйся командой /start."
     else:
         msg += "В каком городе ты находишься?\n"
-        msg += "(В дальнейшем город можно будет изменить командой /change)"
     bot.send_message(message.chat.id, msg, reply_markup=keyboard)
 
 
@@ -123,6 +121,7 @@ def get_current_city(message):
     user_city_name = weatherlib.get_city_name(user_city_id, config.appid)
     msg = ""
     keyboard = types.ReplyKeyboardRemove()
+    send_loc = False
     if user_city_id is None:
         msg += "Не установлен город. Какой город вас интересует?"
     elif not user_city_id:
@@ -130,7 +129,14 @@ def get_current_city(message):
     else:
         msg += f"Текущий город - {user_city_name}."
         keyboard = get_main_menu()
+        send_loc = True
     bot.send_message(message.chat.id, msg, reply_markup=keyboard)
+    if send_loc:
+        lat, lon = weatherlib.get_coordinates(user_city_id, config.appid)
+        if lat is not None and lon is not None:
+            bot.send_location(message.chat.id, lat, lon)
+            bot.send_message(message.chat.id,
+                             "Если город неверный, попробуйте сменить город и вместо названия отправить геопозицию.")
 
 
 @bot.message_handler(commands=['admin_count'])
@@ -146,13 +152,18 @@ def admin_info(message):
 def process_message(message):
     user_city_id = database.query(config, message.chat.id, Command.GET_CITY_ID)
     if user_city_id is None:
-        new_city_id, new_city = weatherlib.check_city(message.text, config.appid)
+        new_city_id, new_city_name = weatherlib.check_city(message.text, config.appid)
         if new_city_id is None:
             bot.send_message(message.chat.id, "Кажется, такого города не существует. Повторите попытку.")
         else:
             database.query(config, message.chat.id, Command.SET_CITY_ID, new_city_id)
-            bot.send_message(message.chat.id, f"Информация обновлена. Текущий город - {new_city}.",
+            bot.send_message(message.chat.id, f"Информация обновлена. Текущий город - {new_city_name}.",
                              reply_markup=get_main_menu())
+            lat, lon = weatherlib.get_coordinates(new_city_id, config.appid)
+            if lat is not None and lon is not None:
+                bot.send_location(message.chat.id, lat, lon)
+                bot.send_message(message.chat.id,
+                                 "Если город неверный, попробуйте сменить город и немного сместить геопозицию.")
     elif not user_city_id:
         bot.send_message(message.chat.id, "Ты не запустил бота. Воспользуйся командой /start.")
     else:
@@ -172,6 +183,30 @@ def process_message(message):
             bot.send_message(message.chat.id, "Выберите пункт меню.", reply_markup=get_main_menu())
         else:
             bot.send_message(message.chat.id, "Неизвестная команда.", reply_markup=get_main_menu())
+
+
+@bot.message_handler(content_types=['location'])
+def process_location(message):
+    user_city_id = database.query(config, message.chat.id, Command.GET_CITY_ID)
+    if user_city_id is None:
+        lat = message.location.latitude
+        lon = message.location.longitude
+        new_city_id, new_city_name = weatherlib.check_city_by_coordinates(lat, lon, config.appid)
+        if new_city_id is None:
+            bot.send_message(message.chat.id, "Извините, населенный пункт не определен. Повторите попытку.")
+        else:
+            database.query(config, message.chat.id, Command.SET_CITY_ID, new_city_id)
+            bot.send_message(message.chat.id, f"Информация обновлена. Текущий город - {new_city_name}.",
+                             reply_markup=get_main_menu())
+            lat, lon = weatherlib.get_coordinates(new_city_id, config.appid)
+            if lat is not None and lon is not None:
+                bot.send_location(message.chat.id, lat, lon)
+                bot.send_message(message.chat.id,
+                                 "Если город неверный, попробуйте сменить город и немного сместить геопозицию.")
+    elif not user_city_id:
+        bot.send_message(message.chat.id, "Ты не запустил бота. Воспользуйся командой /start.")
+    else:
+        bot.send_message(message.chat.id, "Город уже установлен. Изменить его можно в меню.")
 
 
 if __name__ == "__main__":
