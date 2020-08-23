@@ -12,23 +12,38 @@ class WeatherInfo:
         self.wind = round(data['wind']['speed'])
 
 
-def send_request(city, appid, query_type):
-    r = requests.get(f"http://api.openweathermap.org/data/2.5/{query_type}",
-                     params={'q': city, 'units': 'metric', 'lang': 'ru', 'APPID': appid})
-    data = r.json()
+def send_request(city_id, appid, query_type, city_type="id"):
+    response = requests.get(
+        f"http://api.openweathermap.org/data/2.5/{query_type}",
+        params={
+            city_type: city_id,
+            'units': 'metric',
+            'lang': 'ru',
+            'APPID': appid,
+        }
+    )
+    data = response.json()
     return data
 
 
-def check_city(city, appid):
-    data = send_request(city, appid, "weather")
+def check_city(city_name, appid):
+    data = send_request(city_name, appid, "weather", "q")
+    if data["cod"] != 200:
+        return None, None
+    else:
+        return data["id"], data["name"]
+
+
+def get_city_name(city_id, appid):
+    data = send_request(city_id, appid, "weather")
     if data["cod"] != 200:
         return None
     else:
         return data["name"]
 
 
-def get_rain_info(city, appid):
-    data = send_request(city, appid, "forecast")
+def get_rain_info(city_id, appid):
+    data = send_request(city_id, appid, "forecast")
 
     tz = timezone(timedelta(seconds=data['city']['timezone']))
     today = datetime.now(tz)
@@ -53,6 +68,6 @@ def get_rain_info(city, appid):
     return thunderstorm_time, rain_time, drizzle_time
 
 
-def get_current_weather(city, appid):
-    data = send_request(city, appid, "weather")
+def get_current_weather(city_id, appid):
+    data = send_request(city_id, appid, "weather")
     return WeatherInfo(data)

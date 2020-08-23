@@ -7,8 +7,8 @@ class Command(Enum):
     CREATE_USER = 1
     RESET_USER = 2
     DELETE_USER = 3
-    SET_CITY = 4
-    GET_CITY = 5
+    SET_CITY_ID = 4
+    GET_CITY_ID = 5
     GET_COUNT = 6
 
 
@@ -30,14 +30,14 @@ def _get_user(cursor, chat_id):
 
 
 def _insert(cursor, chat_id):
-    cursor.execute(f"INSERT INTO users (chat_id, city) VALUES ({chat_id}, NULL)")
+    cursor.execute(f"INSERT INTO users (chat_id, city_id) VALUES ({chat_id}, NULL)")
 
 
-def _update(cursor, chat_id, city=None):
-    if city is None:
-        cursor.execute(f"UPDATE users SET city = NULL WHERE chat_id = {chat_id}")
+def _update(cursor, chat_id, city_id=None):
+    if city_id is None:
+        cursor.execute(f"UPDATE users SET city_id = NULL WHERE chat_id = {chat_id}")
     else:
-        cursor.execute(f"UPDATE users SET city = '{city}' WHERE chat_id = {chat_id}")
+        cursor.execute(f"UPDATE users SET city_id = {city_id} WHERE chat_id = {chat_id}")
 
 
 def _delete(cursor, chat_id):
@@ -49,7 +49,7 @@ def _count(cursor):
     return len(cursor.fetchall())
 
 
-def query(config, chat_id, command, city=None):
+def query(config, chat_id, command, city_id=None):
     with _get_connection(config) as conn:
         with conn.cursor(cursor_factory=DictCursor) as cursor:
             user = _get_user(cursor, chat_id)
@@ -71,16 +71,16 @@ def query(config, chat_id, command, city=None):
                 else:
                     _delete(cursor, chat_id)
                     return True
-            elif command == Command.SET_CITY:
-                if user is None or city is None:
+            elif command == Command.SET_CITY_ID:
+                if user is None or city_id is None:
                     return False
                 else:
-                    _update(cursor, chat_id, city)
+                    _update(cursor, chat_id, city_id)
                     return True
-            elif command == Command.GET_CITY:
+            elif command == Command.GET_CITY_ID:
                 if user is None:
                     return False
                 else:
-                    return user['city']
+                    return user['city_id']
             elif command == Command.GET_COUNT:
                 return _count(cursor)

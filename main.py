@@ -37,24 +37,25 @@ def start_bot(message):
     else:
         msg += 'Похоже, ты уже запустил бота. Можешь остановить его командой \n/stop или изменить город командой ' \
                '\n/change. '
-        user_city = database.query(config, message.chat.id, Command.GET_CITY)
-        if user_city is not None:
+        user_city_id = database.query(config, message.chat.id, Command.GET_CITY_ID)
+        if user_city_id is not None:
             keyboard = get_main_menu()
     bot.send_message(message.chat.id, msg, reply_markup=keyboard)
 
 
 @bot.message_handler(commands=['rain'])
 def rain_info(message):
-    user_city = database.query(config, message.chat.id, Command.GET_CITY)
+    user_city_id = database.query(config, message.chat.id, Command.GET_CITY_ID)
     msg = ""
     keyboard = types.ReplyKeyboardRemove()
-    if user_city is None:
+    if user_city_id is None:
         msg += "Не установлен город. Какой город тебя интересует?"
-    elif not user_city:
+    elif not user_city_id:
         msg += "Ты не запустил бота. Воспользуйся командой /start."
     else:
-        thunderstorm_time, rain_time, drizzle_time = weatherlib.get_rain_info(user_city, config.appid)
-        msg += f"Город {user_city}:"
+        user_city_name = weatherlib.get_city_name(user_city_id, config.appid)
+        thunderstorm_time, rain_time, drizzle_time = weatherlib.get_rain_info(user_city_id, config.appid)
+        msg += f"Город {user_city_name}:"
         if thunderstorm_time is None and rain_time is None and drizzle_time is None:
             msg += "\nДождя не ожидается."
         if thunderstorm_time is not None:
@@ -69,16 +70,17 @@ def rain_info(message):
 
 @bot.message_handler(commands=['now'])
 def current_weather(message):
-    user_city = database.query(config, message.chat.id, Command.GET_CITY)
+    user_city_id = database.query(config, message.chat.id, Command.GET_CITY_ID)
+    user_city_name = weatherlib.get_city_name(user_city_id, config.appid)
     msg = ""
     keyboard = types.ReplyKeyboardRemove()
-    if user_city is None:
+    if user_city_id is None:
         msg += "Не установлен город. Какой город тебя интересует?"
-    elif not user_city:
+    elif not user_city_id:
         msg += "Ты не запустил бота. Воспользуйся командой /start."
     else:
-        weather = weatherlib.get_current_weather(user_city, config.appid)
-        msg += f"Город {user_city}:\n"
+        weather = weatherlib.get_current_weather(user_city_id, config.appid)
+        msg += f"Город {user_city_name}:\n"
         msg += f"{weather.description}.\n"
         msg += f"Температура: {weather.temperature}°C.\n"
         msg += f"Ощущается как {weather.feels_like}°C.\n"
@@ -117,15 +119,16 @@ def change_city(message):
 
 @bot.message_handler(commands=['city'])
 def get_current_city(message):
-    user_city = database.query(config, message.chat.id, Command.GET_CITY)
+    user_city_id = database.query(config, message.chat.id, Command.GET_CITY_ID)
+    user_city_name = weatherlib.get_city_name(user_city_id, config.appid)
     msg = ""
     keyboard = types.ReplyKeyboardRemove()
-    if user_city is None:
+    if user_city_id is None:
         msg += "Не установлен город. Какой город вас интересует?"
-    elif not user_city:
+    elif not user_city_id:
         msg += "Ты не запустил бота. Воспользуйся командой /start."
     else:
-        msg += f"Текущий город - {user_city}."
+        msg += f"Текущий город - {user_city_name}."
         keyboard = get_main_menu()
     bot.send_message(message.chat.id, msg, reply_markup=keyboard)
 
@@ -141,16 +144,16 @@ def admin_info(message):
 
 @bot.message_handler(content_types=['text'])
 def process_message(message):
-    user_city = database.query(config, message.chat.id, Command.GET_CITY)
-    if user_city is None:
-        new_city = weatherlib.check_city(message.text, config.appid)
-        if new_city is None:
+    user_city_id = database.query(config, message.chat.id, Command.GET_CITY_ID)
+    if user_city_id is None:
+        new_city_id, new_city = weatherlib.check_city(message.text, config.appid)
+        if new_city_id is None:
             bot.send_message(message.chat.id, "Кажется, такого города не существует. Повторите попытку.")
         else:
-            database.query(config, message.chat.id, Command.SET_CITY, new_city)
+            database.query(config, message.chat.id, Command.SET_CITY_ID, new_city_id)
             bot.send_message(message.chat.id, f"Информация обновлена. Текущий город - {new_city}.",
                              reply_markup=get_main_menu())
-    elif not user_city:
+    elif not user_city_id:
         bot.send_message(message.chat.id, "Ты не запустил бота. Воспользуйся командой /start.")
     else:
         if message.text == "Прогноз погоды":
